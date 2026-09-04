@@ -1,0 +1,26 @@
+{{ define "layout" }}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ .Title }} | {{ .AppName }}</title>
+    <link rel="stylesheet" href="{{ asset "/static/css/app.css" }}">
+</head>
+<body>
+    <header class="topbar">
+        <div class="shell">
+            <div>
+                <p class="eyebrow">Proyecto base</p>
+                <h1 class="brand">{{ .AppName }}</h1>
+            </div>
+            <span class="badge">{{ .Environment }}</span>
+        </div>
+    </header>
+
+    <main class="shell">
+        {{ template "content" . }}
+    </main>
+</body>
+</html>
+{{ end }}
