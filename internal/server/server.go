@@ -14,22 +14,30 @@ import (
 	"strings"
 	"time"
 
+	"mantenimiento/internal/auth"
 	"mantenimiento/internal/config"
 	"mantenimiento/internal/db"
+	"mantenimiento/internal/middleware"
 	"mantenimiento/web"
 )
 
 type Server struct {
-	cfg   config.Config
-	db    *db.DB
-	log   *slog.Logger
-	pages map[string]*template.Template
+	cfg         config.Config
+	db          *db.DB
+	log         *slog.Logger
+	sessions    *auth.Sessions
+	userLimiter *auth.Limiter
+	ipLimiter   *auth.Limiter
+	pages       map[string]*template.Template
 }
 
 type homeViewData struct {
 	Title       string
 	AppName     string
 	Environment string
+	UserName    string
+	RoleLabel   string
+	CSRF        string
 }
 
 func New(cfg config.Config, database *db.DB, log *slog.Logger) (*Server, error) {
@@ -39,11 +47,18 @@ func New(cfg config.Config, database *db.DB, log *slog.Logger) (*Server, error) 
 	}
 
 	return &Server{
-		cfg:   cfg,
-		db:    database,
-		log:   log,
-		pages: pages,
+		cfg:         cfg,
+		db:          database,
+		log:         log,
+		sessions:    auth.NewSessions(database),
+		userLimiter: auth.NewLimiter(5, 15*time.Minute),
+		ipLimiter:   auth.NewLimiter(20, 15*time.Minute),
+		pages:       pages,
 	}, nil
+}
+
+func (s *Server) Sessions() *auth.Sessions {
+	return s.sessions
 }
 
 func (s *Server) Handler() http.Handler {
@@ -56,9 +71,29 @@ func (s *Server) Handler() http.Handler {
 
 	mux.Handle("GET /static/", http.StripPrefix("/static/", cacheStatic(http.FileServerFS(staticFiles))))
 	mux.HandleFunc("GET /healthz", s.handleHealthz)
-	mux.HandleFunc("GET /", s.handleHome)
+	mux.HandleFunc("GET /login", s.handleLoginPage)
+	mux.HandleFunc("POST /login", s.handleLoginPost)
+	mux.HandleFunc("POST /logout", s.handleLogout)
 
-	return loggingMiddleware(s.log, mux)
+	requireUser := func(handler http.HandlerFunc) http.Handler {
+		return middleware.RequireUser(handler)
+	}
+	requireAdmin := func(handler http.HandlerFunc) http.Handler {
+		return middleware.RequireAdmin(handler)
+	}
+
+	mux.Handle("GET /{$}", requireUser(s.handleHome))
+	mux.Handle("GET /password", requireUser(s.handlePasswordPage))
+	mux.Handle("POST /password", requireUser(s.handlePasswordPost))
+	mux.Handle("GET /admin", requireAdmin(s.handleAdminHome))
+
+	return middleware.Chain(mux,
+		middleware.Recover(s.log),
+		middleware.RequestLog(s.log),
+		middleware.SecurityHeaders,
+		middleware.Auth(s.sessions),
+		middleware.CSRF,
+	)
 }
 
 func (s *Server) handleHealthz(w http.ResponseWriter, r *http.Request) {
@@ -77,15 +112,27 @@ func (s *Server) handleHealthz(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return
-	}
+	session, _ := middleware.SessionFrom(r)
 
 	s.render(w, http.StatusOK, "home", homeViewData{
 		Title:       "Inicio",
 		AppName:     "Sistema de Mantenimiento",
 		Environment: s.cfg.Env,
+		UserName:    session.User.DisplayName,
+		RoleLabel:   session.User.Role,
+		CSRF:        session.CSRF,
+	})
+}
+
+func (s *Server) handleAdminHome(w http.ResponseWriter, r *http.Request) {
+	session, _ := middleware.SessionFrom(r)
+	s.render(w, http.StatusOK, "admin", homeViewData{
+		Title:       "Administración",
+		AppName:     "Sistema de Mantenimiento",
+		Environment: s.cfg.Env,
+		UserName:    session.User.DisplayName,
+		RoleLabel:   session.User.Role,
+		CSRF:        session.CSRF,
 	})
 }
 
@@ -182,17 +229,5 @@ func cacheStatic(next http.Handler) http.Handler {
 			w.Header().Set("Cache-Control", "public, max-age=300")
 		}
 		next.ServeHTTP(w, r)
-	})
-}
-
-func loggingMiddleware(log *slog.Logger, next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		startedAt := time.Now()
-		next.ServeHTTP(w, r)
-		log.Info("request",
-			"method", r.Method,
-			"path", r.URL.Path,
-			"duration", time.Since(startedAt),
-		)
 	})
 }

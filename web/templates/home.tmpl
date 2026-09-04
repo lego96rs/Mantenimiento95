@@ -1,30 +1,34 @@
 {{ define "content" }}
 <section class="hero card">
-    <p class="eyebrow">Fase 1</p>
-    <h2>Esqueleto inicial listo para extender</h2>
-    <p>
-        La aplicacion ya arranca con servidor HTTP, templates embebidos, assets versionados,
-        conexion SQLite y sistema de migraciones.
-    </p>
+	<p class="eyebrow">Panel privado</p>
+	<h2>Bienvenido, {{ .UserName }}</h2>
+	<p>
+		La autenticacion local, las sesiones server-side, el CSRF y el cambio forzado de
+		contraseña temporal ya están activos como base de la fase de seguridad.
+	</p>
+	<form method="post" action="/logout" class="inline-form">
+		<input type="hidden" name="csrf" value="{{ .CSRF }}">
+		<button type="submit" class="btn-secondary">Cerrar sesión</button>
+	</form>
 </section>
 
 <section class="grid">
-    <article class="card">
-        <h3>Base tecnica</h3>
-        <ul>
-            <li>Go con `net/http` y `html/template`.</li>
-            <li>SQLite con `modernc.org/sqlite` sin CGO.</li>
-            <li>Migraciones embebidas y aplicadas al inicio.</li>
-        </ul>
-    </article>
+	<article class="card">
+		<h3>Seguridad activa</h3>
+		<ul>
+			<li>Hash de contraseñas con Argon2id.</li>
+			<li>Sesiones persistidas en SQLite.</li>
+			<li>CSRF y headers de seguridad en rutas autenticadas.</li>
+		</ul>
+	</article>
 
-    <article class="card">
-        <h3>Siguientes modulos</h3>
-        <ul>
-            <li>Autenticacion y sesiones.</li>
-            <li>Catalogo de activos y documentos.</li>
-            <li>Planificacion y ejecucion de mantenimiento.</li>
-        </ul>
-    </article>
+	<article class="card">
+		<h3>Siguientes módulos</h3>
+		<ul>
+			<li>Maestro de activos y documentos.</li>
+			<li>Plantillas de mantenimiento.</li>
+			<li>Programación y publicaciones operativas.</li>
+		</ul>
+	</article>
 </section>
 {{ end }}

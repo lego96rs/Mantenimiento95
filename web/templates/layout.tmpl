@@ -2,25 +2,33 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ .Title }} | {{ .AppName }}</title>
-    <link rel="stylesheet" href="{{ asset "/static/css/app.css" }}">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>{{ .Title }} | {{ .AppName }}</title>
+	<link rel="stylesheet" href="{{ asset "/static/css/app.css" }}">
 </head>
 <body>
-    <header class="topbar">
-        <div class="shell">
-            <div>
-                <p class="eyebrow">Proyecto base</p>
-                <h1 class="brand">{{ .AppName }}</h1>
-            </div>
-            <span class="badge">{{ .Environment }}</span>
-        </div>
-    </header>
+	<header class="topbar">
+		<div class="shell topbar-inner">
+			<div>
+				<p class="eyebrow">Mantenimiento</p>
+				<h1 class="brand">{{ .AppName }}</h1>
+			</div>
+			<div class="topbar-meta">
+				{{ if .UserName }}
+				<div class="user-chip">
+					<strong>{{ .UserName }}</strong>
+					<span>{{ .RoleLabel }}</span>
+				</div>
+				{{ end }}
+				<span class="badge">{{ .Environment }}</span>
+			</div>
+		</div>
+	</header>
 
-    <main class="shell">
-        {{ template "content" . }}
-    </main>
+	<main class="shell">
+		{{ template "content" . }}
+	</main>
 </body>
 </html>
 {{ end }}
