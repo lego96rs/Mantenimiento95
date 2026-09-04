@@ -1,0 +1,14 @@
+{{ define "content" }}
+<section class="page-card card">
+	<p class="eyebrow">Administración</p>
+	<h2>Panel de administración</h2>
+	<p>
+		Este espacio queda reservado para gestión de usuarios, roles y configuraciones del
+		sistema.
+	</p>
+	<form method="post" action="/logout" class="inline-form">
+		<input type="hidden" name="csrf" value="{{ .CSRF }}">
+		<button type="submit" class="btn-secondary">Cerrar sesión</button>
+	</form>
+</section>
+{{ end }}

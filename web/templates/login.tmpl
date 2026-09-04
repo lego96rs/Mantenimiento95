@@ -1,0 +1,44 @@
+{{ define "content" }}
+<section class="auth-shell">
+	<div class="auth-card">
+		<div class="auth-hero">
+			<p class="eyebrow">Acceso seguro</p>
+			<h2>Ingresa al sistema</h2>
+			<p>
+				Administra planificación, ejecución e incidentes de mantenimiento desde una sola
+				plataforma.
+			</p>
+		</div>
+
+		<div class="auth-panel">
+			{{ if .Error }}<p class="form-error" role="alert">{{ .Error }}</p>{{ end }}
+			<form method="post" action="/login" class="form-stack">
+				<label for="username">Usuario</label>
+				<input
+					id="username"
+					name="username"
+					type="text"
+					required
+					autocomplete="username"
+					autocapitalize="none"
+					spellcheck="false"
+					value="{{ .Username }}"
+					placeholder="usuario"
+				>
+
+				<label for="password">Contraseña</label>
+				<input
+					id="password"
+					name="password"
+					type="password"
+					required
+					autocomplete="current-password"
+					placeholder="contraseña"
+				>
+
+				<button type="submit" class="btn-primary">Ingresar</button>
+			</form>
+		</div>
+	</div>
+</section>
+{{ end }}
