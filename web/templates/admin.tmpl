@@ -4,8 +4,12 @@
 	<h2>Panel de administración</h2>
 	<p>
 		Este espacio queda reservado para gestión de usuarios, roles y configuraciones del
-		sistema.
+		sistema. Mientras tanto, el maestro de activos y catálogos ya está disponible.
 	</p>
+	<div class="action-row">
+		<a class="btn-secondary" href="/assets">Activos</a>
+		<a class="btn-primary" href="/catalogs">Catálogos</a>
+	</div>
 	<form method="post" action="/logout" class="inline-form">
 		<input type="hidden" name="csrf" value="{{ .CSRF }}">
 		<button type="submit" class="btn-secondary">Cerrar sesión</button>

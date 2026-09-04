@@ -29,6 +29,19 @@ func (u *User) IsAdmin() bool {
 	return u.Role == RoleAdmin
 }
 
+func (u *User) HasRole(roles ...string) bool {
+	for _, role := range roles {
+		if u.Role == role {
+			return true
+		}
+	}
+	return false
+}
+
+func (u *User) CanManageAssets() bool {
+	return u.HasRole(RoleAdmin, RolePlanner)
+}
+
 func UserByUsername(ctx context.Context, d *db.DB, username string) (*User, string, error) {
 	var user User
 	var hash string

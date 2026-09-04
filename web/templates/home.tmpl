@@ -14,7 +14,7 @@
 
 <section class="grid">
 	<article class="card">
-		<h3>Seguridad activa</h3>
+		<h3>Base segura</h3>
 		<ul>
 			<li>Hash de contraseñas con Argon2id.</li>
 			<li>Sesiones persistidas en SQLite.</li>
@@ -23,11 +23,15 @@
 	</article>
 
 	<article class="card">
-		<h3>Siguientes módulos</h3>
+		<h3>Activos y catálogos</h3>
 		<ul>
-			<li>Maestro de activos y documentos.</li>
-			<li>Plantillas de mantenimiento.</li>
-			<li>Programación y publicaciones operativas.</li>
+			<li><a href="/assets">Ver maestro de activos</a></li>
+			{{ if or (eq .RoleLabel "admin") (eq .RoleLabel "planner") }}
+			<li><a href="/catalogs">Gestionar áreas, categorías y documentos</a></li>
+			{{ else }}
+			<li>Los catálogos se administran por usuarios `admin` o `planner`.</li>
+			{{ end }}
+			<li>La siguiente fase será plantillas y planificación.</li>
 		</ul>
 	</article>
 </section>

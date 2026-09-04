@@ -1,0 +1,144 @@
+{{ define "content" }}
+<section class="page-card card">
+	<div class="section-head">
+		<div>
+			<p class="eyebrow">Catálogos</p>
+			<h2>Áreas, categorías y documentos</h2>
+			<p>Registra la clasificación maestra y los documentos fuente que alimentan la trazabilidad del sistema.</p>
+		</div>
+		<div class="action-row">
+			<a class="btn-secondary" href="/assets">Ver activos</a>
+		</div>
+	</div>
+
+	{{ if .Error }}<p class="form-error" role="alert">{{ .Error }}</p>{{ end }}
+
+	<div class="grid">
+		<article class="card catalog-card">
+			<h3>Áreas</h3>
+			<form method="post" action="/catalogs/areas" class="form-stack">
+				<input type="hidden" name="csrf" value="{{ .CSRF }}">
+				<label for="area_name">Nombre</label>
+				<input id="area_name" name="name" type="text" value="{{ .AreaForm.Name }}" required placeholder="Operaciones">
+				<label for="area_description">Descripción</label>
+				<textarea id="area_description" name="description" rows="3" placeholder="Área funcional o física">{{ .AreaForm.Description }}</textarea>
+				<button type="submit" class="btn-primary">Guardar área</button>
+			</form>
+			<div class="list-panel">
+				{{ if .Areas }}
+				<ul class="catalog-list">
+					{{ range .Areas }}
+					<li>
+						<strong>{{ .Name }}</strong>
+						{{ if .Description }}<span>{{ .Description }}</span>{{ end }}
+					</li>
+					{{ end }}
+				</ul>
+				{{ else }}
+				<p class="muted">Aún no hay áreas registradas.</p>
+				{{ end }}
+			</div>
+		</article>
+
+		<article class="card catalog-card">
+			<h3>Categorías</h3>
+			<form method="post" action="/catalogs/categories" class="form-stack">
+				<input type="hidden" name="csrf" value="{{ .CSRF }}">
+				<label for="category_name">Nombre</label>
+				<input id="category_name" name="name" type="text" value="{{ .CategoryForm.Name }}" required placeholder="Transportadores">
+				<label for="category_description">Descripción</label>
+				<textarea id="category_description" name="description" rows="3" placeholder="Familia o clase técnica">{{ .CategoryForm.Description }}</textarea>
+				<button type="submit" class="btn-primary">Guardar categoría</button>
+			</form>
+			<div class="list-panel">
+				{{ if .Categories }}
+				<ul class="catalog-list">
+					{{ range .Categories }}
+					<li>
+						<strong>{{ .Name }}</strong>
+						{{ if .Description }}<span>{{ .Description }}</span>{{ end }}
+					</li>
+					{{ end }}
+				</ul>
+				{{ else }}
+				<p class="muted">Aún no hay categorías registradas.</p>
+				{{ end }}
+			</div>
+		</article>
+	</div>
+
+	<article class="card catalog-card">
+		<h3>Documentos técnicos</h3>
+		<form method="post" action="/catalogs/documents" class="form-stack">
+			<input type="hidden" name="csrf" value="{{ .CSRF }}">
+
+			<div class="two-col">
+				<div>
+					<label for="doc_title">Título</label>
+					<input id="doc_title" name="title" type="text" value="{{ .DocumentForm.Title }}" required placeholder="System Maintenance Plan">
+				</div>
+				<div>
+					<label for="doc_type">Tipo</label>
+					<select id="doc_type" name="document_type">
+						<option value="manual" {{ if eq .DocumentForm.DocumentType "manual" }}selected{{ end }}>Manual</option>
+						<option value="plan" {{ if eq .DocumentForm.DocumentType "plan" }}selected{{ end }}>Plan</option>
+						<option value="datasheet" {{ if eq .DocumentForm.DocumentType "datasheet" }}selected{{ end }}>Datasheet</option>
+						<option value="instruction" {{ if eq .DocumentForm.DocumentType "instruction" }}selected{{ end }}>Instrucción</option>
+						<option value="other" {{ if eq .DocumentForm.DocumentType "other" }}selected{{ end }}>Otro</option>
+					</select>
+				</div>
+			</div>
+
+			<div class="two-col">
+				<div>
+					<label for="doc_path">Ruta del archivo</label>
+					<input id="doc_path" name="file_path" type="text" value="{{ .DocumentForm.FilePath }}" required placeholder="docs/System Maintenance Plan.pdf">
+				</div>
+				<div>
+					<label for="doc_source_ref">Referencia fuente</label>
+					<input id="doc_source_ref" name="source_ref" type="text" value="{{ .DocumentForm.SourceRef }}" placeholder="Capítulo 4 / Tabla 2">
+				</div>
+			</div>
+
+			<div>
+				<label for="doc_notes">Notas</label>
+				<textarea id="doc_notes" name="notes" rows="3" placeholder="Alcance, observaciones o vínculo con mantenimiento">{{ .DocumentForm.Notes }}</textarea>
+			</div>
+
+			<div class="action-row">
+				<button type="submit" class="btn-primary">Guardar documento</button>
+				<a class="btn-secondary" href="/assets/new">Crear activo</a>
+			</div>
+		</form>
+
+		<div class="table-wrap">
+			<table class="data-table">
+				<thead>
+					<tr>
+						<th>Título</th>
+						<th>Tipo</th>
+						<th>Ruta</th>
+						<th>Referencia</th>
+					</tr>
+				</thead>
+				<tbody>
+					{{ if .Documents }}
+					{{ range .Documents }}
+					<tr>
+						<td>{{ .Title }}</td>
+						<td>{{ .DocumentType }}</td>
+						<td><span class="path-text">{{ .FilePath }}</span></td>
+						<td>{{ if .SourceRef }}{{ .SourceRef }}{{ else }}<span class="muted">Sin referencia</span>{{ end }}</td>
+					</tr>
+					{{ end }}
+					{{ else }}
+					<tr>
+						<td colspan="4" class="muted">Aún no hay documentos técnicos registrados.</td>
+					</tr>
+					{{ end }}
+				</tbody>
+			</table>
+		</div>
+	</article>
+</section>
+{{ end }}

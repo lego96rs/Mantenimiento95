@@ -1,0 +1,140 @@
+{{ define "content" }}
+<section class="page-card card">
+	<div class="section-head">
+		<div>
+			<p class="eyebrow">Activos</p>
+			<h2>Maestro de activos</h2>
+			<p>Consulta, filtra y revisa el inventario operativo con su trazabilidad documental.</p>
+		</div>
+		{{ if .CanManage }}
+		<div class="action-row">
+			<a class="btn-secondary" href="/catalogs">Catálogos</a>
+			<a class="btn-primary" href="/assets/new">Nuevo activo</a>
+		</div>
+		{{ end }}
+	</div>
+
+	<form method="get" action="/assets" class="filter-grid">
+		<div>
+			<label for="q">Buscar</label>
+			<input id="q" name="q" type="search" value="{{ .Filters.Query }}" placeholder="código, nombre, modelo, ubicación">
+		</div>
+		<div>
+			<label for="area_id">Área</label>
+			<select id="area_id" name="area_id">
+				<option value="">Todas</option>
+				{{ range .Areas }}
+				<option value="{{ .ID }}" {{ if eq $.Filters.AreaID .ID }}selected{{ end }}>{{ .Name }}</option>
+				{{ end }}
+			</select>
+		</div>
+		<div>
+			<label for="category_id">Categoría</label>
+			<select id="category_id" name="category_id">
+				<option value="">Todas</option>
+				{{ range .Categories }}
+				<option value="{{ .ID }}" {{ if eq $.Filters.CategoryID .ID }}selected{{ end }}>{{ .Name }}</option>
+				{{ end }}
+			</select>
+		</div>
+		<div>
+			<label for="state">Estado</label>
+			<select id="state" name="state">
+				<option value="">Todos</option>
+				<option value="active" {{ if eq .Filters.State "active" }}selected{{ end }}>Operativo</option>
+				<option value="maintenance" {{ if eq .Filters.State "maintenance" }}selected{{ end }}>En mantenimiento</option>
+				<option value="fault" {{ if eq .Filters.State "fault" }}selected{{ end }}>Con falla</option>
+				<option value="inactive" {{ if eq .Filters.State "inactive" }}selected{{ end }}>Inactivo</option>
+				<option value="retired" {{ if eq .Filters.State "retired" }}selected{{ end }}>Retirado</option>
+			</select>
+		</div>
+		<div>
+			<label for="criticality">Criticidad</label>
+			<select id="criticality" name="criticality">
+				<option value="">Todas</option>
+				<option value="low" {{ if eq .Filters.Criticality "low" }}selected{{ end }}>Baja</option>
+				<option value="medium" {{ if eq .Filters.Criticality "medium" }}selected{{ end }}>Media</option>
+				<option value="high" {{ if eq .Filters.Criticality "high" }}selected{{ end }}>Alta</option>
+				<option value="critical" {{ if eq .Filters.Criticality "critical" }}selected{{ end }}>Crítica</option>
+			</select>
+		</div>
+		<div>
+			<label for="active">Registro</label>
+			<select id="active" name="active">
+				<option value="active" {{ if eq .Filters.ActiveFilter "active" }}selected{{ end }}>Activos</option>
+				<option value="inactive" {{ if eq .Filters.ActiveFilter "inactive" }}selected{{ end }}>Inactivos</option>
+				<option value="all" {{ if eq .Filters.ActiveFilter "all" }}selected{{ end }}>Todos</option>
+			</select>
+		</div>
+		<div class="filter-actions">
+			<button type="submit" class="btn-primary">Filtrar</button>
+			<a class="btn-secondary" href="/assets">Limpiar</a>
+		</div>
+	</form>
+
+	{{ if .Assets }}
+	<div class="table-wrap">
+		<table class="data-table">
+			<thead>
+				<tr>
+					<th>Código</th>
+					<th>Activo</th>
+					<th>Clasificación</th>
+					<th>Ubicación</th>
+					<th>Estado</th>
+					<th>Documentos</th>
+					{{ if .CanManage }}<th>Acciones</th>{{ end }}
+				</tr>
+			</thead>
+			<tbody>
+				{{ range .Assets }}
+				<tr>
+					<td><strong>{{ .Code }}</strong></td>
+					<td>
+						<div class="stack-tight">
+							<span>{{ .Name }}</span>
+							{{ if .Family }}<small>{{ .Family }}</small>{{ end }}
+							{{ if .Manufacturer }}<small>{{ .Manufacturer }} {{ .Model }}</small>{{ end }}
+						</div>
+					</td>
+					<td>
+						<div class="stack-tight">
+							{{ if .AreaName }}<span>{{ .AreaName }}</span>{{ end }}
+							{{ if .CategoryName }}<small>{{ .CategoryName }}</small>{{ end }}
+							{{ if .Subarea }}<small>{{ .Subarea }}</small>{{ end }}
+						</div>
+					</td>
+					<td>
+						<div class="stack-tight">
+							{{ if .Location }}<span>{{ .Location }}</span>{{ else }}<span class="muted">Sin ubicación</span>{{ end }}
+							{{ if .SerialNumber }}<small>Serie: {{ .SerialNumber }}</small>{{ end }}
+						</div>
+					</td>
+					<td>
+						<div class="stack-tight">
+							<span class="status-chip status-{{ .OperationalState }}">{{ .OperationalState }}</span>
+							<small>Criticidad: {{ .Criticality }}</small>
+						</div>
+					</td>
+					<td>
+						{{ if .DocumentTitles }}
+						<div class="tag-list">
+							{{ range .DocumentTitles }}<span class="tag">{{ . }}</span>{{ end }}
+						</div>
+						{{ else }}
+						<span class="muted">Sin documentos</span>
+						{{ end }}
+					</td>
+					{{ if $.CanManage }}
+					<td><a href="/assets/{{ .ID }}/edit">Editar</a></td>
+					{{ end }}
+				</tr>
+				{{ end }}
+			</tbody>
+		</table>
+	</div>
+	{{ else }}
+	<p class="empty-state">No hay activos para los filtros seleccionados.</p>
+	{{ end }}
+</section>
+{{ end }}

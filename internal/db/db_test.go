@@ -31,7 +31,17 @@ func TestMigrateCreatesSchemaAndIsIdempotent(t *testing.T) {
 		t.Fatalf("second Migrate: %v", err)
 	}
 
-	for _, table := range []string{"app_metadata", "users", "sessions", "schema_migrations"} {
+	for _, table := range []string{
+		"app_metadata",
+		"users",
+		"sessions",
+		"areas",
+		"asset_categories",
+		"technical_documents",
+		"assets",
+		"asset_documents",
+		"schema_migrations",
+	} {
 		var count int
 		err := database.Read.QueryRowContext(ctx,
 			`SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = ?`,

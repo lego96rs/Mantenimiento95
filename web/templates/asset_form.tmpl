@@ -1,0 +1,133 @@
+{{ define "content" }}
+<section class="page-card card">
+	<div class="section-head">
+		<div>
+			<p class="eyebrow">Activos</p>
+			<h2>{{ .FormTitle }}</h2>
+			<p>Completa el maestro técnico y enlaza los documentos fuente aplicables.</p>
+		</div>
+		<div class="action-row">
+			<a class="btn-secondary" href="/assets">Volver al listado</a>
+		</div>
+	</div>
+
+	{{ if .Error }}<p class="form-error" role="alert">{{ .Error }}</p>{{ end }}
+
+	<form method="post" action="{{ .Action }}" class="form-stack">
+		<input type="hidden" name="csrf" value="{{ .CSRF }}">
+
+		<div class="two-col">
+			<div>
+				<label for="code">Código interno</label>
+				<input id="code" name="code" type="text" value="{{ .Asset.Code }}" required placeholder="EQ-001">
+			</div>
+			<div>
+				<label for="name">Nombre del activo</label>
+				<input id="name" name="name" type="text" value="{{ .Asset.Name }}" required placeholder="Conveyor principal">
+			</div>
+		</div>
+
+		<div class="two-col">
+			<div>
+				<label for="family">Familia o tipo</label>
+				<input id="family" name="family" type="text" value="{{ .Asset.Family }}" placeholder="Transportador">
+			</div>
+			<div>
+				<label for="category_id">Categoría</label>
+				<select id="category_id" name="category_id">
+					<option value="">Sin categoría</option>
+					{{ range .Categories }}
+					<option value="{{ .ID }}" {{ if eq $.Asset.CategoryID .ID }}selected{{ end }}>{{ .Name }}</option>
+					{{ end }}
+				</select>
+			</div>
+		</div>
+
+		<div class="two-col">
+			<div>
+				<label for="area_id">Área</label>
+				<select id="area_id" name="area_id">
+					<option value="">Sin área</option>
+					{{ range .Areas }}
+					<option value="{{ .ID }}" {{ if eq $.Asset.AreaID .ID }}selected{{ end }}>{{ .Name }}</option>
+					{{ end }}
+				</select>
+			</div>
+			<div>
+				<label for="subarea">Subárea o línea</label>
+				<input id="subarea" name="subarea" type="text" value="{{ .Asset.Subarea }}" placeholder="Línea A">
+			</div>
+		</div>
+
+		<div class="two-col">
+			<div>
+				<label for="location">Ubicación física</label>
+				<input id="location" name="location" type="text" value="{{ .Asset.Location }}" placeholder="Pasillo 3 / Estación 2">
+			</div>
+			<div>
+				<label for="manufacturer">Fabricante</label>
+				<input id="manufacturer" name="manufacturer" type="text" value="{{ .Asset.Manufacturer }}" placeholder="KNAPP">
+			</div>
+		</div>
+
+		<div class="two-col">
+			<div>
+				<label for="model">Modelo</label>
+				<input id="model" name="model" type="text" value="{{ .Asset.Model }}" placeholder="OSR Shuttle 100b">
+			</div>
+			<div>
+				<label for="serial_number">Número de serie</label>
+				<input id="serial_number" name="serial_number" type="text" value="{{ .Asset.SerialNumber }}" placeholder="SN-12345">
+			</div>
+		</div>
+
+		<div class="two-col">
+			<div>
+				<label for="operational_state">Estado operativo</label>
+				<select id="operational_state" name="operational_state">
+					<option value="active" {{ if eq .Asset.OperationalState "active" }}selected{{ end }}>Operativo</option>
+					<option value="maintenance" {{ if eq .Asset.OperationalState "maintenance" }}selected{{ end }}>En mantenimiento</option>
+					<option value="fault" {{ if eq .Asset.OperationalState "fault" }}selected{{ end }}>Con falla</option>
+					<option value="inactive" {{ if eq .Asset.OperationalState "inactive" }}selected{{ end }}>Inactivo</option>
+					<option value="retired" {{ if eq .Asset.OperationalState "retired" }}selected{{ end }}>Retirado</option>
+				</select>
+			</div>
+			<div>
+				<label for="criticality">Criticidad</label>
+				<select id="criticality" name="criticality">
+					<option value="low" {{ if eq .Asset.Criticality "low" }}selected{{ end }}>Baja</option>
+					<option value="medium" {{ if eq .Asset.Criticality "medium" }}selected{{ end }}>Media</option>
+					<option value="high" {{ if eq .Asset.Criticality "high" }}selected{{ end }}>Alta</option>
+					<option value="critical" {{ if eq .Asset.Criticality "critical" }}selected{{ end }}>Crítica</option>
+				</select>
+			</div>
+		</div>
+
+		<div>
+			<label for="document_ids">Documentos técnicos asociados</label>
+			<select id="document_ids" name="document_ids" multiple size="8">
+				{{ range .Documents }}
+				<option value="{{ .ID }}" {{ if index $.Asset.SelectedDocuments .ID }}selected{{ end }}>
+					{{ .Title }} ({{ .DocumentType }})
+				</option>
+				{{ end }}
+			</select>
+		</div>
+
+		<div>
+			<label for="notes">Notas</label>
+			<textarea id="notes" name="notes" rows="4" placeholder="Observaciones técnicas, alcance o referencias internas">{{ .Asset.Notes }}</textarea>
+		</div>
+
+		<label class="checkbox-row">
+			<input type="checkbox" name="active" {{ if .Asset.Active }}checked{{ end }}>
+			<span>Registro activo</span>
+		</label>
+
+		<div class="action-row">
+			<button type="submit" class="btn-primary">{{ .SubmitLabel }}</button>
+			<a class="btn-secondary" href="/catalogs">Gestionar catálogos</a>
+		</div>
+	</form>
+</section>
+{{ end }}

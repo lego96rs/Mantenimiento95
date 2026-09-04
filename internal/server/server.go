@@ -83,6 +83,15 @@ func (s *Server) Handler() http.Handler {
 	}
 
 	mux.Handle("GET /{$}", requireUser(s.handleHome))
+	mux.Handle("GET /assets", requireUser(s.handleAssetsList))
+	mux.Handle("GET /assets/new", s.requireAssetManager(s.handleAssetNewPage))
+	mux.Handle("POST /assets", s.requireAssetManager(s.handleAssetCreate))
+	mux.Handle("GET /assets/{id}/edit", s.requireAssetManager(s.handleAssetEditPage))
+	mux.Handle("POST /assets/{id}", s.requireAssetManager(s.handleAssetUpdate))
+	mux.Handle("GET /catalogs", s.requireAssetManager(s.handleCatalogsPage))
+	mux.Handle("POST /catalogs/areas", s.requireAssetManager(s.handleAreaCreate))
+	mux.Handle("POST /catalogs/categories", s.requireAssetManager(s.handleCategoryCreate))
+	mux.Handle("POST /catalogs/documents", s.requireAssetManager(s.handleDocumentCreate))
 	mux.Handle("GET /password", requireUser(s.handlePasswordPage))
 	mux.Handle("POST /password", requireUser(s.handlePasswordPost))
 	mux.Handle("GET /admin", requireAdmin(s.handleAdminHome))
