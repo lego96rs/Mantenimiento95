@@ -28,10 +28,13 @@
 			<li><a href="/assets">Ver maestro de activos</a></li>
 			{{ if or (eq .RoleLabel "admin") (eq .RoleLabel "planner") }}
 			<li><a href="/catalogs">Gestionar áreas, categorías y documentos</a></li>
+			<li><a href="/templates">Mantener plantillas de mantenimiento</a></li>
+			<li><a href="/planning">Programar agenda y publicaciones</a></li>
 			{{ else }}
 			<li>Los catálogos se administran por usuarios `admin` o `planner`.</li>
+			<li>Puedes consultar la <a href="/planning">agenda programada</a>.</li>
 			{{ end }}
-			<li>La siguiente fase será plantillas y planificación.</li>
+			<li>La siguiente fase será ejecución operativa sobre tareas publicadas.</li>
 		</ul>
 	</article>
 </section>

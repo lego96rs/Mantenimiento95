@@ -1,0 +1,235 @@
+{{ define "content" }}
+<section class="page-card card">
+	<div class="section-head">
+		<div>
+			<p class="eyebrow">Planificación</p>
+			<h2>Agenda de mantenimiento</h2>
+			<p>Programa tareas futuras, publícalas para ejecución y mantén visible la carga planificada por activo.</p>
+		</div>
+		<div class="action-row">
+			<a class="btn-secondary" href="/templates">Plantillas</a>
+			<a class="btn-secondary" href="/assets">Activos</a>
+		</div>
+	</div>
+
+	{{ if .Error }}<p class="form-error" role="alert">{{ .Error }}</p>{{ end }}
+
+	<form method="get" action="/planning" class="filter-grid">
+		<div>
+			<label for="asset_id">Activo</label>
+			<select id="asset_id" name="asset_id">
+				<option value="">Todos</option>
+				{{ range .Assets }}
+				<option value="{{ .ID }}" {{ if eq $.Filters.AssetID .ID }}selected{{ end }}>{{ .Code }} - {{ .Name }}</option>
+				{{ end }}
+			</select>
+		</div>
+		<div>
+			<label for="template_id">Plantilla</label>
+			<select id="template_id" name="template_id">
+				<option value="">Todas</option>
+				{{ range .Templates }}
+				<option value="{{ .ID }}" {{ if eq $.Filters.TemplateID .ID }}selected{{ end }}>{{ .Name }}</option>
+				{{ end }}
+			</select>
+		</div>
+		<div>
+			<label for="status">Estado</label>
+			<select id="status" name="status">
+				<option value="">Todos</option>
+				<option value="draft" {{ if eq .Filters.Status "draft" }}selected{{ end }}>Borrador</option>
+				<option value="scheduled" {{ if eq .Filters.Status "scheduled" }}selected{{ end }}>Programada</option>
+				<option value="published" {{ if eq .Filters.Status "published" }}selected{{ end }}>Publicada</option>
+				<option value="cancelled" {{ if eq .Filters.Status "cancelled" }}selected{{ end }}>Cancelada</option>
+				<option value="reprogrammed" {{ if eq .Filters.Status "reprogrammed" }}selected{{ end }}>Reprogramada</option>
+				<option value="completed" {{ if eq .Filters.Status "completed" }}selected{{ end }}>Completada</option>
+			</select>
+		</div>
+		<div>
+			<label for="maintenance_type">Tipo</label>
+			<select id="maintenance_type" name="maintenance_type">
+				<option value="">Todos</option>
+				<option value="preventive" {{ if eq .Filters.MaintenanceType "preventive" }}selected{{ end }}>Preventivo</option>
+				<option value="inspection" {{ if eq .Filters.MaintenanceType "inspection" }}selected{{ end }}>Inspección</option>
+				<option value="cleaning" {{ if eq .Filters.MaintenanceType "cleaning" }}selected{{ end }}>Limpieza</option>
+				<option value="safety" {{ if eq .Filters.MaintenanceType "safety" }}selected{{ end }}>Seguridad</option>
+				<option value="corrective" {{ if eq .Filters.MaintenanceType "corrective" }}selected{{ end }}>Correctivo</option>
+			</select>
+		</div>
+		<div>
+			<label for="from">Desde</label>
+			<input id="from" name="from" type="date" value="{{ .Filters.FromDate }}">
+		</div>
+		<div>
+			<label for="to">Hasta</label>
+			<input id="to" name="to" type="date" value="{{ .Filters.ToDate }}">
+		</div>
+		<div class="filter-actions">
+			<button type="submit" class="btn-primary">Filtrar</button>
+			<a class="btn-secondary" href="/planning">Limpiar</a>
+		</div>
+	</form>
+
+	{{ if .CanManage }}
+	<div class="grid planning-grid">
+		<article class="card catalog-card">
+			<h3>Programación desde plantilla</h3>
+			<form method="post" action="/planning/from-template" class="form-stack">
+				<input type="hidden" name="csrf" value="{{ .CSRF }}">
+				<label for="template_launch">Plantilla</label>
+				<select id="template_launch" name="template_id">
+					<option value="">Selecciona una plantilla</option>
+					{{ range .Templates }}
+					<option value="{{ .ID }}" {{ if eq $.Form.TemplateID .ID }}selected{{ end }}>{{ .Name }}</option>
+					{{ end }}
+				</select>
+				<label for="scheduled_for_template">Fecha programada</label>
+				<input id="scheduled_for_template" name="scheduled_for" type="date" value="{{ .Form.ScheduledFor }}">
+				<label for="status_template">Estado inicial</label>
+				<select id="status_template" name="status">
+					<option value="scheduled" {{ if eq .Form.Status "scheduled" }}selected{{ end }}>Programada</option>
+					<option value="published" {{ if eq .Form.Status "published" }}selected{{ end }}>Publicada</option>
+					<option value="draft" {{ if eq .Form.Status "draft" }}selected{{ end }}>Borrador</option>
+				</select>
+				<label for="publication_notes_template">Notas</label>
+				<textarea id="publication_notes_template" name="publication_notes" rows="3" placeholder="Lote piloto, turno nocturno, ventana aprobada">{{ .Form.PublicationNotes }}</textarea>
+				<button type="submit" class="btn-primary">Generar desde plantilla</button>
+			</form>
+		</article>
+
+		<article class="card catalog-card">
+			<h3>Programación manual</h3>
+			<form method="post" action="/planning/tasks" class="form-stack">
+				<input type="hidden" name="csrf" value="{{ .CSRF }}">
+				<label for="title">Título</label>
+				<input id="title" name="title" type="text" value="{{ .Form.Title }}" placeholder="Inspección manual de estación crítica">
+				<div class="two-col">
+					<div>
+						<label for="template_id_manual">Plantilla base</label>
+						<select id="template_id_manual" name="template_id">
+							<option value="">Sin plantilla</option>
+							{{ range .Templates }}
+							<option value="{{ .ID }}" {{ if eq $.Form.TemplateID .ID }}selected{{ end }}>{{ .Name }}</option>
+							{{ end }}
+						</select>
+					</div>
+					<div>
+						<label for="asset_manual">Activo</label>
+						<select id="asset_manual" name="asset_id">
+							<option value="">Sin activo</option>
+							{{ range .Assets }}
+							<option value="{{ .ID }}" {{ if eq $.Form.AssetID .ID }}selected{{ end }}>{{ .Code }} - {{ .Name }}</option>
+							{{ end }}
+						</select>
+					</div>
+				</div>
+				<div class="two-col">
+					<div>
+						<label for="frequency_code_manual">Frecuencia</label>
+						<select id="frequency_code_manual" name="frequency_code">
+							<option value="T" {{ if eq .Form.FrequencyCode "T" }}selected{{ end }}>Diaria</option>
+							<option value="W" {{ if eq .Form.FrequencyCode "W" }}selected{{ end }}>Semanal</option>
+							<option value="M" {{ if eq .Form.FrequencyCode "M" }}selected{{ end }}>Mensual</option>
+							<option value="3M" {{ if eq .Form.FrequencyCode "3M" }}selected{{ end }}>Trimestral</option>
+							<option value="6M" {{ if eq .Form.FrequencyCode "6M" }}selected{{ end }}>Semestral</option>
+							<option value="12M" {{ if eq .Form.FrequencyCode "12M" }}selected{{ end }}>Anual</option>
+							<option value="B" {{ if eq .Form.FrequencyCode "B" }}selected{{ end }}>Condicional</option>
+						</select>
+					</div>
+					<div>
+						<label for="maintenance_type_manual">Tipo</label>
+						<select id="maintenance_type_manual" name="maintenance_type">
+							<option value="preventive" {{ if eq .Form.MaintenanceType "preventive" }}selected{{ end }}>Preventivo</option>
+							<option value="inspection" {{ if eq .Form.MaintenanceType "inspection" }}selected{{ end }}>Inspección</option>
+							<option value="cleaning" {{ if eq .Form.MaintenanceType "cleaning" }}selected{{ end }}>Limpieza</option>
+							<option value="safety" {{ if eq .Form.MaintenanceType "safety" }}selected{{ end }}>Seguridad</option>
+							<option value="corrective" {{ if eq .Form.MaintenanceType "corrective" }}selected{{ end }}>Correctivo</option>
+						</select>
+					</div>
+				</div>
+				<div class="two-col">
+					<div>
+						<label for="scheduled_for_manual">Fecha programada</label>
+						<input id="scheduled_for_manual" name="scheduled_for" type="date" value="{{ .Form.ScheduledFor }}">
+					</div>
+					<div>
+						<label for="status_manual">Estado</label>
+						<select id="status_manual" name="status">
+							<option value="scheduled" {{ if eq .Form.Status "scheduled" }}selected{{ end }}>Programada</option>
+							<option value="published" {{ if eq .Form.Status "published" }}selected{{ end }}>Publicada</option>
+							<option value="draft" {{ if eq .Form.Status "draft" }}selected{{ end }}>Borrador</option>
+						</select>
+					</div>
+				</div>
+				<div class="two-col">
+					<div>
+						<label for="window_start">Ventana inicio</label>
+						<input id="window_start" name="window_start" type="text" value="{{ .Form.WindowStart }}" placeholder="08:00">
+					</div>
+					<div>
+						<label for="window_end">Ventana fin</label>
+						<input id="window_end" name="window_end" type="text" value="{{ .Form.WindowEnd }}" placeholder="12:00">
+					</div>
+				</div>
+				<label for="publication_notes">Notas</label>
+				<textarea id="publication_notes" name="publication_notes" rows="3" placeholder="Restringir producción, coordinar con operaciones">{{ .Form.PublicationNotes }}</textarea>
+				<button type="submit" class="btn-primary">Guardar programación</button>
+			</form>
+		</article>
+	</div>
+	{{ end }}
+
+	{{ if .ScheduledTasks }}
+	<div class="table-wrap">
+		<table class="data-table">
+			<thead>
+				<tr>
+					<th>Fecha</th>
+					<th>Tarea</th>
+					<th>Activo</th>
+					<th>Plantilla</th>
+					<th>Estado</th>
+					<th>Publicación</th>
+				</tr>
+			</thead>
+			<tbody>
+				{{ range .ScheduledTasks }}
+				<tr>
+					<td>
+						<div class="stack-tight">
+							<strong>{{ .ScheduledFor }}</strong>
+							{{ if or .WindowStart .WindowEnd }}<small>{{ .WindowStart }} {{ if and .WindowStart .WindowEnd }}-{{ end }} {{ .WindowEnd }}</small>{{ end }}
+						</div>
+					</td>
+					<td>
+						<div class="stack-tight">
+							<span>{{ .Title }}</span>
+							<small>{{ .MaintenanceType }}</small>
+							<small>Frecuencia: {{ .FrequencyCode }}</small>
+						</div>
+					</td>
+					<td>{{ if .AssetName }}{{ .AssetName }}{{ else }}<span class="muted">Sin activo</span>{{ end }}</td>
+					<td>
+						<div class="stack-tight">
+							{{ if .TemplateName }}<span>{{ .TemplateName }}</span>{{ else }}<span class="muted">Manual</span>{{ end }}
+							{{ if .SourceDocumentTitle }}<small>{{ .SourceDocumentTitle }}</small>{{ end }}
+						</div>
+					</td>
+					<td><span class="status-chip status-{{ .Status }}">{{ .Status }}</span></td>
+					<td>
+						<div class="stack-tight">
+							{{ if .PublishedByName }}<span>{{ .PublishedByName }}</span>{{ else }}<span class="muted">No publicada</span>{{ end }}
+							{{ if .PublishedAt }}<small>{{ .PublishedAt }}</small>{{ end }}
+							{{ if .PublicationNotes }}<small>{{ .PublicationNotes }}</small>{{ end }}
+						</div>
+					</td>
+				</tr>
+				{{ end }}
+			</tbody>
+		</table>
+	</div>
+	{{ else }}
+	<p class="empty-state">No hay tareas programadas para el rango y filtros seleccionados.</p>
+	{{ end }}
+</section>
+{{ end }}

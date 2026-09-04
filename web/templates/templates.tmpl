@@ -1,0 +1,144 @@
+{{ define "content" }}
+<section class="page-card card">
+	<div class="section-head">
+		<div>
+			<p class="eyebrow">Planificación</p>
+			<h2>Plantillas de mantenimiento</h2>
+			<p>Define frecuencias, procedimiento base y trazabilidad con manuales para luego generar tareas programadas.</p>
+		</div>
+		<div class="action-row">
+			<a class="btn-secondary" href="/planning">Agenda</a>
+			{{ if .CanManage }}<a class="btn-primary" href="/templates/new">Nueva plantilla</a>{{ end }}
+		</div>
+	</div>
+
+	<form method="get" action="/templates" class="filter-grid">
+		<div>
+			<label for="q">Buscar</label>
+			<input id="q" name="q" type="search" value="{{ .Filters.Query }}" placeholder="nombre, procedimiento, activo, documento">
+		</div>
+		<div>
+			<label for="asset_id">Activo</label>
+			<select id="asset_id" name="asset_id">
+				<option value="">Todos</option>
+				{{ range .Assets }}
+				<option value="{{ .ID }}" {{ if eq $.Filters.AssetID .ID }}selected{{ end }}>{{ .Code }} - {{ .Name }}</option>
+				{{ end }}
+			</select>
+		</div>
+		<div>
+			<label for="category_id">Categoría</label>
+			<select id="category_id" name="category_id">
+				<option value="">Todas</option>
+				{{ range .Categories }}
+				<option value="{{ .ID }}" {{ if eq $.Filters.CategoryID .ID }}selected{{ end }}>{{ .Name }}</option>
+				{{ end }}
+			</select>
+		</div>
+		<div>
+			<label for="frequency">Frecuencia</label>
+			<select id="frequency" name="frequency">
+				<option value="">Todas</option>
+				<option value="T" {{ if eq .Filters.FrequencyCode "T" }}selected{{ end }}>Diaria</option>
+				<option value="W" {{ if eq .Filters.FrequencyCode "W" }}selected{{ end }}>Semanal</option>
+				<option value="M" {{ if eq .Filters.FrequencyCode "M" }}selected{{ end }}>Mensual</option>
+				<option value="3M" {{ if eq .Filters.FrequencyCode "3M" }}selected{{ end }}>Trimestral</option>
+				<option value="6M" {{ if eq .Filters.FrequencyCode "6M" }}selected{{ end }}>Semestral</option>
+				<option value="12M" {{ if eq .Filters.FrequencyCode "12M" }}selected{{ end }}>Anual</option>
+				<option value="B" {{ if eq .Filters.FrequencyCode "B" }}selected{{ end }}>Condicional</option>
+			</select>
+		</div>
+		<div>
+			<label for="maintenance_type">Tipo</label>
+			<select id="maintenance_type" name="maintenance_type">
+				<option value="">Todos</option>
+				<option value="preventive" {{ if eq .Filters.MaintenanceType "preventive" }}selected{{ end }}>Preventivo</option>
+				<option value="inspection" {{ if eq .Filters.MaintenanceType "inspection" }}selected{{ end }}>Inspección</option>
+				<option value="cleaning" {{ if eq .Filters.MaintenanceType "cleaning" }}selected{{ end }}>Limpieza</option>
+				<option value="safety" {{ if eq .Filters.MaintenanceType "safety" }}selected{{ end }}>Seguridad</option>
+				<option value="corrective" {{ if eq .Filters.MaintenanceType "corrective" }}selected{{ end }}>Correctivo</option>
+			</select>
+		</div>
+		<div>
+			<label for="active">Estado</label>
+			<select id="active" name="active">
+				<option value="active" {{ if eq .Filters.ActiveFilter "active" }}selected{{ end }}>Activas</option>
+				<option value="inactive" {{ if eq .Filters.ActiveFilter "inactive" }}selected{{ end }}>Inactivas</option>
+				<option value="all" {{ if eq .Filters.ActiveFilter "all" }}selected{{ end }}>Todas</option>
+			</select>
+		</div>
+		<div class="filter-actions">
+			<button type="submit" class="btn-primary">Filtrar</button>
+			<a class="btn-secondary" href="/templates">Limpiar</a>
+		</div>
+	</form>
+
+	{{ if .Templates }}
+	<div class="table-wrap">
+		<table class="data-table">
+			<thead>
+				<tr>
+					<th>Plantilla</th>
+					<th>Alcance</th>
+					<th>Frecuencia</th>
+					<th>Duración</th>
+					<th>Documento</th>
+					<th>Flags</th>
+					{{ if .CanManage }}<th>Acciones</th>{{ end }}
+				</tr>
+			</thead>
+			<tbody>
+				{{ range .Templates }}
+				<tr>
+					<td>
+						<div class="stack-tight">
+							<strong>{{ .Name }}</strong>
+							<small>{{ .MaintenanceType }}</small>
+							<small>{{ .ProcedureSummary }}</small>
+						</div>
+					</td>
+					<td>
+						<div class="stack-tight">
+							{{ if .AssetName }}<span>{{ .AssetName }}</span>{{ end }}
+							{{ if .AssetCategoryName }}<small>{{ .AssetCategoryName }}</small>{{ end }}
+						</div>
+					</td>
+					<td>
+						<div class="stack-tight">
+							<span class="status-chip status-scheduled">{{ .FrequencyCode }}</span>
+							<small>Prioridad: {{ .Priority }}</small>
+						</div>
+					</td>
+					<td>{{ .EstimatedMinutes }} min</td>
+					<td>
+						<div class="stack-tight">
+							{{ if .SourceDocumentTitle }}<span>{{ .SourceDocumentTitle }}</span>{{ else }}<span class="muted">Sin documento</span>{{ end }}
+							{{ if .SourceRef }}<small>{{ .SourceRef }}</small>{{ end }}
+						</div>
+					</td>
+					<td>
+						<div class="tag-list">
+							{{ if .RequiresChecklist }}<span class="tag">Checklist</span>{{ end }}
+							{{ if .RequiresSupervisor }}<span class="tag">Supervisor</span>{{ end }}
+							{{ if .RequiresQualifiedPersonnel }}<span class="tag">Personal calificado</span>{{ end }}
+							{{ if not .Active }}<span class="tag">Inactiva</span>{{ end }}
+						</div>
+					</td>
+					{{ if $.CanManage }}
+					<td>
+						<div class="stack-tight">
+							<a href="/templates/{{ .ID }}/edit">Editar</a>
+							<a href="/planning?template_id={{ .ID }}">Ver agenda</a>
+						</div>
+					</td>
+					{{ end }}
+				</tr>
+				{{ end }}
+			</tbody>
+		</table>
+	</div>
+	{{ else }}
+	<p class="empty-state">No hay plantillas para los filtros seleccionados.</p>
+	{{ end }}
+</section>
+{{ end }}

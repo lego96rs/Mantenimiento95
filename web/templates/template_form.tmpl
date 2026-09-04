@@ -1,0 +1,138 @@
+{{ define "content" }}
+<section class="page-card card">
+	<div class="section-head">
+		<div>
+			<p class="eyebrow">Planificación</p>
+			<h2>{{ .FormTitle }}</h2>
+			<p>Convierte el contenido de manuales y planes en una plantilla reutilizable para agenda y publicación futura.</p>
+		</div>
+		<div class="action-row">
+			<a class="btn-secondary" href="/templates">Volver a plantillas</a>
+			<a class="btn-secondary" href="/planning">Ir a agenda</a>
+		</div>
+	</div>
+
+	{{ if .Error }}<p class="form-error" role="alert">{{ .Error }}</p>{{ end }}
+
+	<form method="post" action="{{ .Action }}" class="form-stack">
+		<input type="hidden" name="csrf" value="{{ .CSRF }}">
+
+		<div class="two-col">
+			<div>
+				<label for="name">Nombre de plantilla</label>
+				<input id="name" name="name" type="text" value="{{ .Template.Name }}" required placeholder="Inspección mensual de conveyor">
+			</div>
+			<div>
+				<label for="source_document_id">Documento fuente</label>
+				<select id="source_document_id" name="source_document_id">
+					<option value="">Sin documento fuente</option>
+					{{ range .Documents }}
+					<option value="{{ .ID }}" {{ if eq $.Template.SourceDocumentID .ID }}selected{{ end }}>{{ .Title }}</option>
+					{{ end }}
+				</select>
+			</div>
+		</div>
+
+		<div class="two-col">
+			<div>
+				<label for="asset_id">Activo objetivo</label>
+				<select id="asset_id" name="asset_id">
+					<option value="">Plantilla genérica</option>
+					{{ range .Assets }}
+					<option value="{{ .ID }}" {{ if eq $.Template.AssetID .ID }}selected{{ end }}>{{ .Code }} - {{ .Name }}</option>
+					{{ end }}
+				</select>
+			</div>
+			<div>
+				<label for="asset_category_id">Categoría objetivo</label>
+				<select id="asset_category_id" name="asset_category_id">
+					<option value="">Sin categoría</option>
+					{{ range .Categories }}
+					<option value="{{ .ID }}" {{ if eq $.Template.AssetCategoryID .ID }}selected{{ end }}>{{ .Name }}</option>
+					{{ end }}
+				</select>
+			</div>
+		</div>
+
+		<div class="two-col">
+			<div>
+				<label for="frequency_code">Frecuencia</label>
+				<select id="frequency_code" name="frequency_code">
+					<option value="T" {{ if eq .Template.FrequencyCode "T" }}selected{{ end }}>Diaria</option>
+					<option value="W" {{ if eq .Template.FrequencyCode "W" }}selected{{ end }}>Semanal</option>
+					<option value="M" {{ if eq .Template.FrequencyCode "M" }}selected{{ end }}>Mensual</option>
+					<option value="3M" {{ if eq .Template.FrequencyCode "3M" }}selected{{ end }}>Trimestral</option>
+					<option value="6M" {{ if eq .Template.FrequencyCode "6M" }}selected{{ end }}>Semestral</option>
+					<option value="12M" {{ if eq .Template.FrequencyCode "12M" }}selected{{ end }}>Anual</option>
+					<option value="B" {{ if eq .Template.FrequencyCode "B" }}selected{{ end }}>Condicional</option>
+				</select>
+			</div>
+			<div>
+				<label for="maintenance_type">Tipo de mantenimiento</label>
+				<select id="maintenance_type" name="maintenance_type">
+					<option value="preventive" {{ if eq .Template.MaintenanceType "preventive" }}selected{{ end }}>Preventivo</option>
+					<option value="inspection" {{ if eq .Template.MaintenanceType "inspection" }}selected{{ end }}>Inspección</option>
+					<option value="cleaning" {{ if eq .Template.MaintenanceType "cleaning" }}selected{{ end }}>Limpieza</option>
+					<option value="safety" {{ if eq .Template.MaintenanceType "safety" }}selected{{ end }}>Seguridad</option>
+					<option value="corrective" {{ if eq .Template.MaintenanceType "corrective" }}selected{{ end }}>Correctivo</option>
+				</select>
+			</div>
+		</div>
+
+		<div class="two-col">
+			<div>
+				<label for="priority">Prioridad</label>
+				<select id="priority" name="priority">
+					<option value="low" {{ if eq .Template.Priority "low" }}selected{{ end }}>Baja</option>
+					<option value="medium" {{ if eq .Template.Priority "medium" }}selected{{ end }}>Media</option>
+					<option value="high" {{ if eq .Template.Priority "high" }}selected{{ end }}>Alta</option>
+					<option value="critical" {{ if eq .Template.Priority "critical" }}selected{{ end }}>Crítica</option>
+				</select>
+			</div>
+			<div>
+				<label for="estimated_minutes">Duración estimada</label>
+				<input id="estimated_minutes" name="estimated_minutes" type="number" min="1" value="{{ .Template.EstimatedMinutes }}" required>
+			</div>
+		</div>
+
+		<div>
+			<label for="source_ref">Referencia documental</label>
+			<input id="source_ref" name="source_ref" type="text" value="{{ .Template.SourceRef }}" placeholder="Capítulo 4 / Tabla 2">
+		</div>
+
+		<div>
+			<label for="procedure_summary">Procedimiento resumido</label>
+			<textarea id="procedure_summary" name="procedure_summary" rows="4" required placeholder="Inspeccionar rodillos, tensión, sensores y limpieza general">{{ .Template.ProcedureSummary }}</textarea>
+		</div>
+
+		<div>
+			<label for="validation_criteria">Criterios de validación</label>
+			<textarea id="validation_criteria" name="validation_criteria" rows="3" placeholder="Sin desgaste crítico, sensores alineados, torque verificado">{{ .Template.ValidationCriteria }}</textarea>
+		</div>
+
+		<div class="checkbox-grid">
+			<label class="checkbox-row">
+				<input type="checkbox" name="requires_checklist" {{ if .Template.RequiresChecklist }}checked{{ end }}>
+				<span>Requiere checklist</span>
+			</label>
+			<label class="checkbox-row">
+				<input type="checkbox" name="requires_supervisor" {{ if .Template.RequiresSupervisor }}checked{{ end }}>
+				<span>Requiere supervisor</span>
+			</label>
+			<label class="checkbox-row">
+				<input type="checkbox" name="requires_qualified_personnel" {{ if .Template.RequiresQualifiedPersonnel }}checked{{ end }}>
+				<span>Requiere personal calificado</span>
+			</label>
+			<label class="checkbox-row">
+				<input type="checkbox" name="active" {{ if .Template.Active }}checked{{ end }}>
+				<span>Plantilla activa</span>
+			</label>
+		</div>
+
+		<div class="action-row">
+			<button type="submit" class="btn-primary">{{ .SubmitLabel }}</button>
+			<a class="btn-secondary" href="/assets">Consultar activos</a>
+		</div>
+	</form>
+</section>
+{{ end }}
