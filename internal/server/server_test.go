@@ -59,13 +59,13 @@ func TestHealthz(t *testing.T) {
 	}
 }
 
-func TestHomeRenders(t *testing.T) {
+func TestHomeRedirectsToLoginWhenAnonymous(t *testing.T) {
 	rec := get(t, newTestServer(t), "/")
-	if rec.Code != http.StatusOK {
-		t.Fatalf("status = %d, want 200; body: %s", rec.Code, rec.Body.String())
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("status = %d, want 303; body: %s", rec.Code, rec.Body.String())
 	}
-	if !strings.Contains(rec.Body.String(), "Esqueleto inicial listo para extender") {
-		t.Fatalf("home page body missing hero heading: %s", rec.Body.String())
+	if rec.Header().Get("Location") != "/login" {
+		t.Fatalf("location = %q, want /login", rec.Header().Get("Location"))
 	}
 }
 
