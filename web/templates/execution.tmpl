@@ -1,0 +1,264 @@
+{{ define "content" }}
+<section class="page-card card">
+	<div class="section-head">
+		<div>
+			<p class="eyebrow">Ejecución</p>
+			<h2>Bandeja operativa</h2>
+			<p>Convierte tareas publicadas en órdenes de trabajo, asigna responsables y registra avance, checklist e incidentes.</p>
+		</div>
+		<div class="action-row">
+			<a class="btn-secondary" href="/planning">Planificación</a>
+			<a class="btn-secondary" href="/templates">Plantillas</a>
+		</div>
+	</div>
+
+	{{ if .Error }}<p class="form-error" role="alert">{{ .Error }}</p>{{ end }}
+
+	<form method="get" action="/execution" class="filter-grid">
+		<div>
+			<label for="asset_id">Activo</label>
+			<select id="asset_id" name="asset_id">
+				<option value="">Todos</option>
+				{{ range .Assets }}
+				<option value="{{ .ID }}" {{ if eq $.Filters.AssetID .ID }}selected{{ end }}>{{ .Code }} - {{ .Name }}</option>
+				{{ end }}
+			</select>
+		</div>
+		<div>
+			<label for="assigned_to">Responsable</label>
+			<select id="assigned_to" name="assigned_to">
+				<option value="">Todos</option>
+				{{ range .AssignableUsers }}
+				<option value="{{ .ID }}" {{ if eq $.Filters.AssignedTo .ID }}selected{{ end }}>{{ .DisplayName }} ({{ .Role }})</option>
+				{{ end }}
+			</select>
+		</div>
+		<div>
+			<label for="status">Estado</label>
+			<select id="status" name="status">
+				<option value="">Todos</option>
+				<option value="pending" {{ if eq .Filters.Status "pending" }}selected{{ end }}>Pendiente</option>
+				<option value="assigned" {{ if eq .Filters.Status "assigned" }}selected{{ end }}>Asignada</option>
+				<option value="in_progress" {{ if eq .Filters.Status "in_progress" }}selected{{ end }}>En progreso</option>
+				<option value="paused" {{ if eq .Filters.Status "paused" }}selected{{ end }}>Pausada</option>
+				<option value="blocked" {{ if eq .Filters.Status "blocked" }}selected{{ end }}>Bloqueada</option>
+				<option value="done" {{ if eq .Filters.Status "done" }}selected{{ end }}>Cerrada</option>
+				<option value="cancelled" {{ if eq .Filters.Status "cancelled" }}selected{{ end }}>Cancelada</option>
+			</select>
+		</div>
+		<div>
+			<label for="maintenance_type">Tipo</label>
+			<select id="maintenance_type" name="maintenance_type">
+				<option value="">Todos</option>
+				<option value="preventive" {{ if eq .Filters.MaintenanceType "preventive" }}selected{{ end }}>Preventivo</option>
+				<option value="inspection" {{ if eq .Filters.MaintenanceType "inspection" }}selected{{ end }}>Inspección</option>
+				<option value="cleaning" {{ if eq .Filters.MaintenanceType "cleaning" }}selected{{ end }}>Limpieza</option>
+				<option value="safety" {{ if eq .Filters.MaintenanceType "safety" }}selected{{ end }}>Seguridad</option>
+				<option value="corrective" {{ if eq .Filters.MaintenanceType "corrective" }}selected{{ end }}>Correctivo</option>
+			</select>
+		</div>
+		<div>
+			<label for="from">Desde</label>
+			<input id="from" name="from" type="date" value="{{ .Filters.FromDate }}">
+		</div>
+		<div>
+			<label for="to">Hasta</label>
+			<input id="to" name="to" type="date" value="{{ .Filters.ToDate }}">
+		</div>
+		<div class="filter-actions">
+			<button type="submit" class="btn-primary">Filtrar</button>
+			<a class="btn-secondary" href="/execution">Limpiar</a>
+		</div>
+	</form>
+
+	{{ if .CanManage }}
+	<article class="card catalog-card execution-create-card">
+		<h3>Crear orden desde tarea publicada</h3>
+		<form method="post" action="/execution/from-schedule" class="form-stack">
+			<input type="hidden" name="csrf" value="{{ .CSRF }}">
+			<label for="scheduled_task_id">Tarea publicada disponible</label>
+			<select id="scheduled_task_id" name="scheduled_task_id">
+				<option value="">Selecciona una tarea publicada</option>
+				{{ range .PublishedTasks }}
+				<option value="{{ .ID }}" {{ if eq $.Form.ScheduledTaskID .ID }}selected{{ end }}>{{ .ScheduledFor }} · {{ .Title }}{{ if .AssetName }} · {{ .AssetName }}{{ end }}</option>
+				{{ end }}
+			</select>
+			<button type="submit" class="btn-primary">Crear orden de trabajo</button>
+		</form>
+	</article>
+	{{ end }}
+
+	{{ if .WorkOrders }}
+	<div class="execution-list">
+		{{ range .WorkOrders }}
+		{{ $wo := . }}
+		<article class="card execution-card">
+			<div class="section-head">
+				<div class="stack-tight">
+					<p class="eyebrow">{{ .WorkOrderCode }}</p>
+					<h3>{{ .Title }}</h3>
+					<small>{{ if .AssetName }}{{ .AssetName }}{{ else }}Sin activo{{ end }} · {{ .ScheduledFor }} · {{ .MaintenanceType }}</small>
+				</div>
+				<div class="stack-tight execution-summary">
+					<span class="status-chip status-{{ .ExecutionStatus }}">{{ .ExecutionStatus }}</span>
+					<small>{{ if .AssignedToName }}Responsable: {{ .AssignedToName }}{{ else }}Sin asignar{{ end }}</small>
+					<small>Checklist pendiente: {{ .ChecklistPending }} · Incidentes abiertos: {{ .OpenIncidentCount }}</small>
+				</div>
+			</div>
+
+			<div class="grid execution-grid">
+				<section class="card execution-panel">
+					<h4>Resumen</h4>
+					<div class="stack-tight">
+						<small>Plantilla: {{ if .TemplateName }}{{ .TemplateName }}{{ else }}Manual{{ end }}</small>
+						{{ if .PublicationNotes }}<small>Notas de publicación: {{ .PublicationNotes }}</small>{{ end }}
+						{{ if .AssignedAt }}<small>Asignada: {{ .AssignedAt }}</small>{{ end }}
+						{{ if .StartTime }}<small>Inicio: {{ .StartTime }}</small>{{ end }}
+						{{ if .EndTime }}<small>Fin: {{ .EndTime }}</small>{{ end }}
+						<small>Minutos reales: {{ .TotalMinutes }}</small>
+						{{ if .ExecutionNotes }}<small>Bitácora: {{ .ExecutionNotes }}</small>{{ end }}
+						{{ if .CloseSummary }}<small>Cierre: {{ .CloseSummary }}</small>{{ end }}
+					</div>
+				</section>
+
+				{{ if $.CanManage }}
+				<section class="card execution-panel">
+					<h4>Asignación</h4>
+					<form method="post" action="/execution/{{ .ID }}/assign" class="form-stack">
+						<input type="hidden" name="csrf" value="{{ $.CSRF }}">
+						<label for="assign_{{ .ID }}">Responsable</label>
+						<select id="assign_{{ .ID }}" name="assigned_to">
+							<option value="">Sin asignar</option>
+							{{ range $.AssignableUsers }}
+							<option value="{{ .ID }}" {{ if eq $wo.AssignedTo .ID }}selected{{ end }}>{{ .DisplayName }} ({{ .Role }})</option>
+							{{ end }}
+						</select>
+						<button type="submit" class="btn-primary">Guardar asignación</button>
+					</form>
+				</section>
+				{{ end }}
+
+				{{ if .CanOperate }}
+				<section class="card execution-panel">
+					<h4>Avance</h4>
+					<form method="post" action="/execution/{{ .ID }}/progress" class="form-stack">
+						<input type="hidden" name="csrf" value="{{ $.CSRF }}">
+						<label for="status_{{ .ID }}">Estado</label>
+						<select id="status_{{ .ID }}" name="status">
+							<option value="assigned" {{ if eq .ExecutionStatus "assigned" }}selected{{ end }}>Asignada</option>
+							<option value="in_progress" {{ if eq .ExecutionStatus "in_progress" }}selected{{ end }}>En progreso</option>
+							<option value="paused" {{ if eq .ExecutionStatus "paused" }}selected{{ end }}>Pausada</option>
+							<option value="blocked" {{ if eq .ExecutionStatus "blocked" }}selected{{ end }}>Bloqueada</option>
+							<option value="done">Cerrada</option>
+							<option value="cancelled">Cancelada</option>
+						</select>
+						<label for="minutes_{{ .ID }}">Minutos reales</label>
+						<input id="minutes_{{ .ID }}" name="total_minutes" type="number" min="0" value="{{ .TotalMinutes }}">
+						<label for="notes_{{ .ID }}">Bitácora</label>
+						<textarea id="notes_{{ .ID }}" name="execution_notes" rows="3">{{ .ExecutionNotes }}</textarea>
+						<label for="close_{{ .ID }}">Resumen de cierre</label>
+						<textarea id="close_{{ .ID }}" name="close_summary" rows="3">{{ .CloseSummary }}</textarea>
+						<button type="submit" class="btn-primary">Actualizar avance</button>
+					</form>
+				</section>
+				{{ end }}
+
+				{{ if $.CanManage }}
+				<section class="card execution-panel">
+					<h4>Checklist base</h4>
+					<form method="post" action="/execution/{{ .ID }}/checklist" class="form-stack">
+						<input type="hidden" name="csrf" value="{{ $.CSRF }}">
+						<label for="checklist_{{ .ID }}">Ítems, uno por línea</label>
+						<textarea id="checklist_{{ .ID }}" name="checklist_items" rows="4" placeholder="Verificar sensores&#10;Validar guardas">{{ $.Form.ChecklistItemsText }}</textarea>
+						<button type="submit" class="btn-primary">Guardar checklist</button>
+					</form>
+				</section>
+				{{ end }}
+			</div>
+
+			<div class="grid execution-grid execution-bottom">
+				<section class="card execution-panel">
+					<h4>Checklist operativa</h4>
+					{{ if .Checklist }}
+					<div class="execution-checklist">
+						{{ range .Checklist }}
+						<form method="post" action="/execution/{{ $wo.ID }}/checklist/{{ .ID }}" class="execution-check-item">
+							<input type="hidden" name="csrf" value="{{ $.CSRF }}">
+							<label class="checkbox-row">
+								<input type="checkbox" name="is_done" value="on" {{ if .IsDone }}checked{{ end }}>
+								<span>{{ .ItemText }}</span>
+							</label>
+							<textarea name="notes" rows="2" placeholder="Observaciones">{{ .Notes }}</textarea>
+							{{ if $wo.CanOperate }}<button type="submit" class="btn-secondary">Guardar ítem</button>{{ end }}
+						</form>
+						{{ end }}
+					</div>
+					{{ else }}
+					<p class="empty-state">Todavía no hay ítems de checklist cargados para esta orden.</p>
+					{{ end }}
+				</section>
+
+				<section class="card execution-panel">
+					<h4>Incidentes</h4>
+					{{ if .Incidents }}
+					<div class="execution-incidents">
+						{{ range .Incidents }}
+						{{ $incident := . }}
+						<div class="execution-incident">
+							<div class="stack-tight">
+								<strong>{{ .Title }}</strong>
+								<small>{{ .Severity }} · {{ .Status }}</small>
+								<small>{{ .Description }}</small>
+								{{ if .EscalationNotes }}<small>{{ .EscalationNotes }}</small>{{ end }}
+							</div>
+							{{ if $.CanManage }}
+							<form method="post" action="/execution/{{ $wo.ID }}/incidents/{{ $incident.ID }}/status" class="form-stack inline-form">
+								<input type="hidden" name="csrf" value="{{ $.CSRF }}">
+								<label for="incident_status_{{ $incident.ID }}">Estado</label>
+								<select id="incident_status_{{ $incident.ID }}" name="status">
+									<option value="open" {{ if eq $incident.Status "open" }}selected{{ end }}>Abierto</option>
+									<option value="investigating" {{ if eq $incident.Status "investigating" }}selected{{ end }}>Investigando</option>
+									<option value="resolved" {{ if eq $incident.Status "resolved" }}selected{{ end }}>Resuelto</option>
+									<option value="closed" {{ if eq $incident.Status "closed" }}selected{{ end }}>Cerrado</option>
+								</select>
+								<label for="incident_notes_{{ $incident.ID }}">Notas</label>
+								<textarea id="incident_notes_{{ $incident.ID }}" name="escalation_notes" rows="2">{{ $incident.EscalationNotes }}</textarea>
+								<button type="submit" class="btn-secondary">Actualizar incidente</button>
+							</form>
+							{{ end }}
+						</div>
+						{{ end }}
+					</div>
+					{{ else }}
+					<p class="empty-state">Sin incidentes registrados.</p>
+					{{ end }}
+
+					{{ if .CanOperate }}
+					<form method="post" action="/execution/{{ .ID }}/incidents" class="form-stack inline-form">
+						<input type="hidden" name="csrf" value="{{ $.CSRF }}">
+						<label for="severity_{{ .ID }}">Severidad</label>
+						<select id="severity_{{ .ID }}" name="severity">
+							<option value="low">Baja</option>
+							<option value="medium" selected>Media</option>
+							<option value="high">Alta</option>
+							<option value="critical">Crítica</option>
+						</select>
+						<label for="incident_title_{{ .ID }}">Título</label>
+						<input id="incident_title_{{ .ID }}" name="title" type="text" placeholder="Vibración en rodillo">
+						<label for="incident_description_{{ .ID }}">Descripción</label>
+						<textarea id="incident_description_{{ .ID }}" name="description" rows="3" placeholder="Describe hallazgo y condición detectada"></textarea>
+						<label for="incident_escalation_{{ .ID }}">Notas</label>
+						<textarea id="incident_escalation_{{ .ID }}" name="escalation_notes" rows="2" placeholder="Acción inmediata, escalamiento o repuesto requerido"></textarea>
+						<button type="submit" class="btn-primary">Registrar incidente</button>
+					</form>
+					{{ end }}
+				</section>
+			</div>
+		</article>
+		{{ end }}
+	</div>
+	{{ else }}
+	<p class="empty-state">No hay órdenes de trabajo para los filtros seleccionados.</p>
+	{{ end }}
+</section>
+{{ end }}

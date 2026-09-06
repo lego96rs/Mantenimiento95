@@ -412,6 +412,84 @@ textarea {
 	margin-bottom: 1.5rem;
 }
 
+.execution-create-card,
+.execution-card {
+	margin-bottom: 1.25rem;
+}
+
+.execution-list {
+	display: grid;
+	gap: 1rem;
+}
+
+.execution-grid {
+	align-items: start;
+	margin-top: 1rem;
+}
+
+.execution-bottom {
+	margin-top: 1rem;
+}
+
+.execution-panel {
+	padding: 1rem;
+}
+
+.execution-panel h4 {
+	margin-top: 0;
+	margin-bottom: 0.85rem;
+}
+
+.execution-summary {
+	align-items: flex-end;
+}
+
+.execution-checklist,
+.execution-incidents {
+	display: grid;
+	gap: 0.75rem;
+}
+
+.execution-check-item,
+.execution-incident {
+	display: grid;
+	gap: 0.6rem;
+	padding: 0.85rem;
+	border: 1px solid var(--border);
+	border-radius: 14px;
+	background: #fafcff;
+}
+
+.status-pending {
+	background: #eff6ff;
+	color: #1d4ed8;
+}
+
+.status-assigned {
+	background: #ede9fe;
+	color: #6d28d9;
+}
+
+.status-in_progress {
+	background: #dcfce7;
+	color: #166534;
+}
+
+.status-paused {
+	background: #fef3c7;
+	color: #92400e;
+}
+
+.status-blocked {
+	background: #fee2e2;
+	color: #b91c1c;
+}
+
+.status-done {
+	background: #e5e7eb;
+	color: #374151;
+}
+
 .status-draft {
 	background: #e0f2fe;
 	color: #075985;

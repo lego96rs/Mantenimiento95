@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"mantenimiento/internal/db"
 )
@@ -40,6 +41,14 @@ func (u *User) HasRole(roles ...string) bool {
 
 func (u *User) CanManageAssets() bool {
 	return u.HasRole(RoleAdmin, RolePlanner)
+}
+
+func (u *User) CanManageExecution() bool {
+	return u.HasRole(RoleAdmin, RolePlanner, RoleSupervisor)
+}
+
+func (u *User) CanExecuteWorkOrders() bool {
+	return u.HasRole(RoleAdmin, RolePlanner, RoleSupervisor, RoleTechnician)
 }
 
 func UserByUsername(ctx context.Context, d *db.DB, username string) (*User, string, error) {
@@ -127,6 +136,55 @@ func CountAdmins(ctx context.Context, d *db.DB) (int, error) {
 		RoleAdmin,
 	).Scan(&count)
 	return count, err
+}
+
+func ListActiveUsers(ctx context.Context, d *db.DB, roles ...string) ([]User, error) {
+	var (
+		args []any
+		sqlb strings.Builder
+	)
+
+	sqlb.WriteString(`
+SELECT id, username, display_name, role, active, must_change_password
+FROM users
+WHERE active = 1`)
+
+	if len(roles) > 0 {
+		sqlb.WriteString(` AND role IN (`)
+		for i, role := range roles {
+			if i > 0 {
+				sqlb.WriteString(",")
+			}
+			sqlb.WriteString("?")
+			args = append(args, role)
+		}
+		sqlb.WriteString(`)`)
+	}
+
+	sqlb.WriteString(` ORDER BY display_name, username`)
+
+	rows, err := d.Read.QueryContext(ctx, sqlb.String(), args...)
+	if err != nil {
+		return nil, fmt.Errorf("models: list active users: %w", err)
+	}
+	defer rows.Close()
+
+	var items []User
+	for rows.Next() {
+		var item User
+		if err := rows.Scan(
+			&item.ID,
+			&item.Username,
+			&item.DisplayName,
+			&item.Role,
+			&item.Active,
+			&item.MustChangePassword,
+		); err != nil {
+			return nil, fmt.Errorf("models: scan active user: %w", err)
+		}
+		items = append(items, item)
+	}
+	return items, rows.Err()
 }
 
 func boolToInt(value bool) int {

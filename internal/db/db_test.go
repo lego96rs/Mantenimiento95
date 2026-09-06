@@ -40,6 +40,11 @@ func TestMigrateCreatesSchemaAndIsIdempotent(t *testing.T) {
 		"technical_documents",
 		"assets",
 		"asset_documents",
+		"maintenance_templates",
+		"scheduled_tasks",
+		"work_orders",
+		"work_order_checklists",
+		"incidents",
 		"schema_migrations",
 	} {
 		var count int
