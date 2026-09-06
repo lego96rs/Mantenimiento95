@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"mantenimiento/internal/auth"
+	"mantenimiento/internal/bootstrap"
 	"mantenimiento/internal/config"
 	"mantenimiento/internal/db"
 	"mantenimiento/internal/models"
@@ -22,16 +23,17 @@ import (
 
 func main() {
 	createAdmin := flag.String("create-admin", "", "create an admin user with a temporary password and exit")
+	seedCritical := flag.Bool("seed-critical-maintenance", false, "seed critical maintenance documents, templates, schedules and work orders")
 	flag.Parse()
 
 	log := slog.New(slog.NewTextHandler(os.Stdout, nil))
-	if err := run(log, *createAdmin); err != nil {
+	if err := run(log, *createAdmin, *seedCritical); err != nil {
 		log.Error("fatal", "err", err)
 		os.Exit(1)
 	}
 }
 
-func run(log *slog.Logger, createAdmin string) error {
+func run(log *slog.Logger, createAdmin string, seedCritical bool) error {
 	cfg, err := config.Load()
 	if err != nil {
 		return err
@@ -52,6 +54,9 @@ func run(log *slog.Logger, createAdmin string) error {
 
 	if createAdmin != "" {
 		return bootstrapAdmin(ctx, database, createAdmin)
+	}
+	if seedCritical {
+		return seedCriticalMaintenance(ctx, database)
 	}
 
 	app, err := server.New(cfg, database, log)
@@ -113,6 +118,24 @@ func run(log *slog.Logger, createAdmin string) error {
 		}
 		return nil
 	}
+}
+
+func seedCriticalMaintenance(ctx context.Context, database *db.DB) error {
+	summary, err := bootstrap.SeedCriticalMaintenance(ctx, database, time.Now().UTC())
+	if err != nil {
+		return err
+	}
+	fmt.Printf(
+		"Bootstrap crítico completado.\n  documentos:   %d\n  activos:      %d\n  plantillas:   %d\n  agendas:      %d\n  ordenes:      %d\n  asignaciones: %d\n  checklists:   %d\n",
+		summary.Documents,
+		summary.Assets,
+		summary.Templates,
+		summary.Schedules,
+		summary.WorkOrders,
+		summary.Assignments,
+		summary.Checklists,
+	)
+	return nil
 }
 
 func bootstrapAdmin(ctx context.Context, database *db.DB, username string) error {
